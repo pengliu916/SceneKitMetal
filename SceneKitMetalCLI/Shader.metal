@@ -7,6 +7,7 @@
 //
 
 #include <metal_stdlib>
+#include "ColorUtilities.metal"
 using namespace metal;
 
 typedef struct
@@ -27,11 +28,29 @@ typedef struct
 } ColorInOut;
 
 vertex ColorInOut vsRender(Vertex in [[ stage_in ]],
-                           constant Uniforms & uniforms [[ buffer(1) ]])
+                           constant Uniforms & uniforms [[ buffer(1) ]],
+                           constant uint3 & u3Quantile [[ buffer(2) ]],
+                           ushort iid [[ instance_id ]])
 {
     ColorInOut out;
-    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * float4(in.position, 1.0);
-    out.col = float3(1, 0, 0);
+    int ilayerCnt = u3Quantile.x * u3Quantile.y;
+    int z = iid / ilayerCnt;
+    int y = (iid % ilayerCnt) / u3Quantile.x;
+    int x = iid % u3Quantile.x;
+    float3 f3BoxSize = 1.0 / float3(u3Quantile);
+    float3 f3Offset = float3(x,y,z) * f3BoxSize;
+    // This is color value in PQ
+    float3 f3Pos = (in.position + 0.5) * f3BoxSize + f3Offset;
+    
+    float3 lineCol = PQ2L(f3Pos);
+    
+    f3Pos = XYZ_2_xyY(BT2020D65RGB_2_XYZ(lineCol));
+    
+    f3Pos.z /= 10000.f;
+    f3Pos -= float3(0.31271, 0.329, 0);
+    
+    out.col = lineCol / 10000.f;
+    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * float4(f3Pos, 1.0);
     
     return out;
 }

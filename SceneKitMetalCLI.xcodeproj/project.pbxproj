@@ -12,6 +12,7 @@
 		1D15789D2192BC50006E390F /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D15789C2192BC50006E390F /* GameViewController.swift */; };
 		1D791A3E2192C09200015D00 /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D791A3D2192C09200015D00 /* MetalRenderer.swift */; };
 		1D791A402192C12100015D00 /* Shader.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1D791A3F2192C12100015D00 /* Shader.metal */; };
+		1D90AF6821939D0B00CFCDD1 /* ColorUtilities.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1D90AF6721939D0B00CFCDD1 /* ColorUtilities.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,6 +34,8 @@
 		1D15789C2192BC50006E390F /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		1D791A3D2192C09200015D00 /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
 		1D791A3F2192C12100015D00 /* Shader.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shader.metal; sourceTree = "<group>"; };
+		1D90AF6721939D0B00CFCDD1 /* ColorUtilities.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = ColorUtilities.metal; sourceTree = "<group>"; };
+		1D90AF6921939D4600CFCDD1 /* SharedHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedHeader.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +73,8 @@
 				1D15789C2192BC50006E390F /* GameViewController.swift */,
 				1D791A3D2192C09200015D00 /* MetalRenderer.swift */,
 				1D791A3F2192C12100015D00 /* Shader.metal */,
+				1D90AF6721939D0B00CFCDD1 /* ColorUtilities.metal */,
+				1D90AF6921939D4600CFCDD1 /* SharedHeader.h */,
 			);
 			path = SceneKitMetalCLI;
 			sourceTree = "<group>";
@@ -135,6 +140,7 @@
 				1D15789B2192BBEE006E390F /* AppDelegate.swift in Sources */,
 				1D15789D2192BC50006E390F /* GameViewController.swift in Sources */,
 				1D791A402192C12100015D00 /* Shader.metal in Sources */,
+				1D90AF6821939D0B00CFCDD1 /* ColorUtilities.metal in Sources */,
 				1D1578942192BB9D006E390F /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

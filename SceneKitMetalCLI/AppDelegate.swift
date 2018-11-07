@@ -15,7 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var gameViewCtrl: GameViewController!
     
     init(_ width: UInt32, _ height: UInt32) {
-        window = NSWindow(contentRect: NSMakeRect(100, 100, CGFloat(width), CGFloat(height)), styleMask: .titled, backing: .buffered, defer: false, screen: nil)
+        window = NSWindow(contentRect: NSMakeRect(100, 100, CGFloat(width), CGFloat(height)), styleMask: .resizable, backing: .buffered, defer: false, screen: nil)
         
         let viewCtrl = GameViewController()
         
@@ -36,7 +36,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-       
         window.makeKeyAndOrderFront(nil)
     }
 }

@@ -27,13 +27,13 @@ class GameViewController: NSViewController {
     }
     
     override func viewWillAppear() {
-        self.view.window?.styleMask.insert(NSWindow.StyleMask.fullSizeContentView)
-        self.view.window?.toolbar?.isVisible = true
-        self.view.window?.titleVisibility = .hidden
-        self.view.window?.titlebarAppearsTransparent = true
-        self.view.window?.isMovableByWindowBackground = false
-        self.view.window?.standardWindowButton(NSWindow.ButtonType.closeButton)?.isHidden = true
-        self.view.window?.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)?.isHidden = true
-        self.view.window?.standardWindowButton(NSWindow.ButtonType.zoomButton)?.isHidden = true
+//        self.view.window?.styleMask.insert(NSWindow.StyleMask.fullSizeContentView)
+//        self.view.window?.toolbar?.isVisible = true
+//        self.view.window?.titleVisibility = .hidden
+//        self.view.window?.titlebarAppearsTransparent = true
+//        self.view.window?.isMovableByWindowBackground = false
+//        self.view.window?.standardWindowButton(NSWindow.ButtonType.closeButton)?.isHidden = true
+//        self.view.window?.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)?.isHidden = true
+//        self.view.window?.standardWindowButton(NSWindow.ButtonType.zoomButton)?.isHidden = true
     }
 }
