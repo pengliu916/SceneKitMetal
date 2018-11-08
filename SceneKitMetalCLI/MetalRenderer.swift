@@ -25,6 +25,18 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
     var gfxPSO: MTLRenderPipelineState!
     var depthState: MTLDepthStencilState!
     
+    var showAll: Bool = true
+    
+    var focusedBrightnessPQ: Float = 100
+    
+    public func switchShowAll() {
+        showAll = !showAll
+    }
+    
+    public func setFocusedBrightnessPQ(_ val: Float) {
+        focusedBrightnessPQ = val
+    }
+    
     override init() {
         dev = MTLCreateSystemDefaultDevice()
         renderer = SCNRenderer(device: dev, options: nil)
@@ -32,11 +44,13 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         sceneView = SCNView(frame: NSApplication.shared.windows[0].frame)
         sceneView.autoenablesDefaultLighting = true
         sceneView.allowsCameraControl = true
-        //sceneView.backgroundColor = .black
+        sceneView.backgroundColor = .gray
+        //sceneView.showsStatistics = true
         
         let camera = SCNCamera ()
         let cameraNode = SCNNode ()
         camera.zNear = 0.001
+        camera.fieldOfView = 45
         cameraNode.camera = camera
         cameraNode.position = SCNVector3Make(0, 0, 1) // set your camera position
         renderer.scene!.rootNode.addChildNode(cameraNode)
@@ -121,9 +135,9 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
     
     func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
         guard let gfxEncoder = renderer.currentRenderCommandEncoder else {return}
-        let x = UInt32(16)
-        let y = UInt32(16)
-        let z = UInt32(16)
+        let x = UInt32(32)
+        let y = UInt32(32)
+        let z = UInt32(32)
         gfxEncoder.setCullMode(.none)
         gfxEncoder.setFrontFacing(.counterClockwise)
         gfxEncoder.setRenderPipelineState(gfxPSO)
@@ -135,6 +149,8 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         var quantile = vector_uint3(x, y, z)
         bufSize = MemoryLayout<vector_uint3>.size
         gfxEncoder.setVertexBytes(&quantile, length: bufSize, index: 2)
+        gfxEncoder.setVertexBytes(&showAll, length:MemoryLayout<Bool>.size, index: 3)
+        gfxEncoder.setVertexBytes(&focusedBrightnessPQ, length: MemoryLayout<Float>.size, index: 4)
         gfxEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 16, instanceCount: Int(x*y*z))
     }
     

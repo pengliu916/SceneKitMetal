@@ -36,4 +36,14 @@ class GameViewController: NSViewController {
 //        self.view.window?.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)?.isHidden = true
 //        self.view.window?.standardWindowButton(NSWindow.ButtonType.zoomButton)?.isHidden = true
     }
+    
+    func switchShowAll() {
+        renderer.switchShowAll()
+        renderer.sceneView.sceneTime += 1
+    }
+    
+    func setFocusedBrightnessPQ(_ val:Float) {
+        renderer.setFocusedBrightnessPQ(val)
+        renderer.sceneView.sceneTime += 1
+    }
 }
