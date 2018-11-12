@@ -24,6 +24,10 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
     var vertexBuf: MTLBuffer!
     var gfxPSO: MTLRenderPipelineState!
     var depthState: MTLDepthStencilState!
+    var library: MTLLibrary!
+    var vsShader: MTLFunction!
+    var psShader: MTLFunction!
+    var mtlVertDesc: MTLVertexDescriptor!
     
     var showAll: Bool = true
     
@@ -60,8 +64,13 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
 //        originNode.position = SCNVector3Make(0, 0, 0)
 //        renderer.scene!.rootNode.addChildNode(originNode)
         sceneView.scene = renderer.scene
-        pixFormat = .rgba16Float
-        //pixFormat = (sceneView.layer as! CAMetalLayer).pixelFormat
+        pixFormat = sceneView.colorPixelFormat
+        
+        // Creating shader
+        library = dev.makeDefaultLibrary()
+        vsShader = library.makeFunction(name: "vsRender")
+        psShader = library.makeFunction(name: "fsRender")
+        
         super.init()
     }
     
@@ -85,9 +94,8 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
                                        +0.5, -0.5, -0.5]
         vertexBuf = dev.makeBuffer(bytes: fishMeshVertex, length: MemoryLayout<Float>.size * 16*3, options: MTLResourceOptions.storageModeManaged)
         // Create graphics pipeline obj
-        let mtlVertDesc = MetalRenderer.buildMetalVertexDescriptor()
-        guard let PSO = self.buildRenderPipelineWithDevice(device: dev, mtlVertexDescriptor: mtlVertDesc) else {return}
-        gfxPSO = PSO
+        mtlVertDesc = MetalRenderer.buildMetalVertexDescriptor()
+        
         let depthStateDesciptor = MTLDepthStencilDescriptor()
         depthStateDesciptor.depthCompareFunction = MTLCompareFunction.less
         depthStateDesciptor.isDepthWriteEnabled = true
@@ -96,6 +104,23 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         
         sceneView.delegate = self
     }
+    
+    private func createPSO(pixelformat: MTLPixelFormat, sampleCnt: Int) {
+        let pipelineDescriptor = MTLRenderPipelineDescriptor()
+        pipelineDescriptor.label = "RenderPipeline"
+        pipelineDescriptor.sampleCount = sampleCnt
+        pipelineDescriptor.vertexFunction = vsShader
+        pipelineDescriptor.fragmentFunction = psShader
+        pipelineDescriptor.vertexDescriptor = mtlVertDesc
+        
+        pipelineDescriptor.colorAttachments[0].pixelFormat = pixelformat
+        pipelineDescriptor.depthAttachmentPixelFormat = MTLPixelFormat.depth32Float
+        
+        gfxPSO = try? dev.makeRenderPipelineState(descriptor: pipelineDescriptor)
+        
+        if gfxPSO == nil {print("Failed to get PSO")}
+    }
+    
     class func buildMetalVertexDescriptor() -> MTLVertexDescriptor {
         // Creete a Metal vertex descriptor specifying how vertices will by laid out for input into our render
         //   pipeline and how we'll layout our Model IO vertices
@@ -112,28 +137,11 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         
         return mtlVertexDescriptor
     }
-    func buildRenderPipelineWithDevice(device: MTLDevice, mtlVertexDescriptor: MTLVertexDescriptor) -> MTLRenderPipelineState? {
-        /// Build a render state pipeline object
-        // Creating shader
-        guard let library = device.makeDefaultLibrary() else {print("Failed get library");return nil}
-        guard let vertexFunction = library.makeFunction(name: "vsRender") else {print("Failed get vs");return nil}
-        guard let fragmentFunction = library.makeFunction(name: "fsRender") else {print("Failed get fs");return nil}
-        
-        let pipelineDescriptor = MTLRenderPipelineDescriptor()
-        pipelineDescriptor.label = "RenderPipeline"
-        pipelineDescriptor.sampleCount = 4
-        pipelineDescriptor.vertexFunction = vertexFunction
-        pipelineDescriptor.fragmentFunction = fragmentFunction
-        pipelineDescriptor.vertexDescriptor = mtlVertexDescriptor
-        
-        pipelineDescriptor.colorAttachments[0].pixelFormat = pixFormat
-        pipelineDescriptor.depthAttachmentPixelFormat = MTLPixelFormat.depth32Float
-        
-        guard let pos = try? device.makeRenderPipelineState(descriptor: pipelineDescriptor) else {print("Failed get PSO");return nil}
-        return pos
-    }
     
     func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
+        if pixFormat != sceneView.colorPixelFormat {
+            createPSO(pixelformat: sceneView.colorPixelFormat, sampleCnt: 4)
+        }
         guard let gfxEncoder = renderer.currentRenderCommandEncoder else {return}
         let x = UInt32(32)
         let y = UInt32(32)

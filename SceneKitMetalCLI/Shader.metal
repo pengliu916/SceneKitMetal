@@ -49,6 +49,7 @@ vertex ColorInOut vsRender(Vertex in [[ stage_in ]],
         float fMaxBrightness = BT2020D65RGB_2_XYZ(PQ2L(f3MaxCol)).y;
         float fMinBrightness = BT2020D65RGB_2_XYZ(PQ2L(f3MinCol)).y;
         fZoffset = fFocuseVal/10000.f;
+        //if ( fFocuseVal/10000.f>f3MaxCol.y || fFocuseVal/10000.f < f3MinCol.x)
         if ( fFocuseVal>fMaxBrightness || fFocuseVal < fMinBrightness)
             return out;
     } else {
