@@ -14,7 +14,7 @@ struct Uniforms {
     var modelViewMatrix:matrix_float4x4
 }
 
-class MetalRenderer: NSObject, SCNSceneRendererDelegate {
+class MetalRenderer: NSObject, SCNSceneRendererDelegate, SCNNodeRendererDelegate {
     
     let sceneView: SCNView
     let renderer: SCNRenderer
@@ -73,6 +73,11 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         psShader = library.makeFunction(name: "fsRender")
         
         super.init()
+        
+        
+        let dummyNode = SCNNode()
+        dummyNode.rendererDelegate = self
+        renderer.scene?.rootNode.addChildNode(dummyNode)
     }
     
     func setupMetalResource() {
@@ -140,6 +145,35 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
+//        if gfxPSO == nil || pixFormat != sceneView.colorPixelFormat {
+//            createPSO(pixelformat: sceneView.colorPixelFormat, sampleCnt: 4)
+//        }
+//        guard let gfxEncoder = renderer.currentRenderCommandEncoder else {return}
+//        let x = UInt32(32)
+//        let y = UInt32(32)
+//        let z = UInt32(32)
+//        gfxEncoder.setCullMode(.none)
+//        gfxEncoder.setFrontFacing(.counterClockwise)
+//        gfxEncoder.setRenderPipelineState(gfxPSO)
+//        gfxEncoder.setDepthStencilState(depthState)
+//        gfxEncoder.setVertexBuffer(vertexBuf, offset: 0, index: 0)
+//        var matrixs = Uniforms(projectionMatrix: float4x4.init((sceneView.pointOfView?.camera?.projectionTransform)!), modelViewMatrix: float4x4.init((sceneView.pointOfView?.worldTransform)!).inverse)
+//        var bufSize = MemoryLayout<Float>.size * (2 * 16)
+//        gfxEncoder.setVertexBytes(&matrixs, length: bufSize, index: 1)
+//        var quantile = vector_uint3(x, y, z)
+//        bufSize = MemoryLayout<vector_uint3>.size
+//        gfxEncoder.setVertexBytes(&quantile, length: bufSize, index: 2)
+//        gfxEncoder.setVertexBytes(&showAll, length:MemoryLayout<Bool>.size, index: 3)
+//        gfxEncoder.setVertexBytes(&focusedBrightnessPQ, length: MemoryLayout<Float>.size, index: 4)
+//        gfxEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 16, instanceCount: Int(x*y*z))
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: TimeInterval) {
+        
+    }
+    
+    // SCNNodeRendererDelegate
+    func renderNode(_ node: SCNNode, renderer: SCNRenderer, arguments: [String : Any]) {
         if gfxPSO == nil || pixFormat != sceneView.colorPixelFormat {
             createPSO(pixelformat: sceneView.colorPixelFormat, sampleCnt: 4)
         }
@@ -152,7 +186,7 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         gfxEncoder.setRenderPipelineState(gfxPSO)
         gfxEncoder.setDepthStencilState(depthState)
         gfxEncoder.setVertexBuffer(vertexBuf, offset: 0, index: 0)
-        var matrixs = Uniforms(projectionMatrix: float4x4.init((sceneView.pointOfView?.camera?.projectionTransform)!), modelViewMatrix: float4x4.init((sceneView.pointOfView?.worldTransform)!).inverse)
+        var matrixs = Uniforms(projectionMatrix: float4x4(arguments[SCNProjectionTransform] as! SCNMatrix4), modelViewMatrix: float4x4.init((sceneView.pointOfView?.worldTransform)!).inverse)
         var bufSize = MemoryLayout<Float>.size * (2 * 16)
         gfxEncoder.setVertexBytes(&matrixs, length: bufSize, index: 1)
         var quantile = vector_uint3(x, y, z)
@@ -161,9 +195,5 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         gfxEncoder.setVertexBytes(&showAll, length:MemoryLayout<Bool>.size, index: 3)
         gfxEncoder.setVertexBytes(&focusedBrightnessPQ, length: MemoryLayout<Float>.size, index: 4)
         gfxEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 16, instanceCount: Int(x*y*z))
-    }
-    
-    func renderer(_ renderer: SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: TimeInterval) {
-        
     }
 }
