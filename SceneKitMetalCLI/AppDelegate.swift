@@ -13,58 +13,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     var window : NSWindow!
     var gameViewCtrl: GameViewController!
-    var slider: NSSlider!
-    var label: NSTextField!
     
     init(_ width: UInt32, _ height: UInt32) {
-        window = NSWindow(contentRect: NSMakeRect(100, 100, CGFloat(width), CGFloat(height)), styleMask: .resizable, backing: .buffered, defer: false, screen: nil)
+        window = NSWindow(contentRect: NSMakeRect(100, 100, CGFloat(width), CGFloat(height)),
+                          styleMask: [.titled, .fullSizeContentView ,.resizable], backing: .buffered, defer: false)
+        gameViewCtrl = GameViewController()
         
-        let viewCtrl = GameViewController()
-        
-        window.contentViewController = viewCtrl
-        gameViewCtrl = viewCtrl
-    }
-    
-    override init() {
-        super.init()
-        
-        window = NSWindow(contentRect: NSMakeRect(100, 100, 200, 200),
-                          styleMask: .titled, backing: .buffered, defer: false, screen: nil)
-        let viewCtrl = GameViewController()
-        
-        window.contentViewController = viewCtrl
-        gameViewCtrl = viewCtrl
-        
+        window.contentViewController = gameViewCtrl
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let menubar = NSMenu(title: "MenuBar")
+        let appMenu = NSMenu(title: "")
+        appMenu.addItem(withTitle: "Quit", action: #selector(NSApplication.shared.terminate(_:)), keyEquivalent: "q")
+        menubar.addItem(withTitle: "AppNameWillBeChangedAutomatically", action: nil, keyEquivalent: "")
+        menubar.setSubmenu(appMenu, for: menubar.item(at: 0)!)
+        app.mainMenu = menubar;
+        window.contentView = gameViewCtrl.view
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.standardWindowButton(.miniaturizeButton)!.isHidden = true
+        window.standardWindowButton(.zoomButton)!.isHidden = true
+        window.standardWindowButton(.closeButton)!.isEnabled = true
+        
         window.makeKeyAndOrderFront(nil)
-        let button = NSButton(frame: NSMakeRect(20, 20, 80, 20))
-        button.title = "Switch Show All"
-        button.target = self
-        button.action = #selector(onClick)
-        window.contentView?.addSubview(button)
-        
-        slider = NSSlider(frame: NSMakeRect(120, 20, 400, 20))
-        slider.minValue = 0
-        slider.maxValue = 10000
-        slider.isContinuous = true
-        slider.target = self
-        slider.action = #selector(sliderValueChanged)
-        window.contentView?.addSubview(slider)
-        
-        label = NSTextField(frame: NSMakeRect(530, 20, 80, 20))
-        label.stringValue = ""
-        window.contentView?.addSubview(label)
     }
     
-    @IBAction func onClick(_: Any) {
-        gameViewCtrl.switchShowAll()
-    }
-    
-    @IBAction func sliderValueChanged(_: Any) {
-        let value = slider.floatValue
-        gameViewCtrl.setFocusedBrightnessPQ(value)
-        label.stringValue = "\(value)nits"
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
     }
 }

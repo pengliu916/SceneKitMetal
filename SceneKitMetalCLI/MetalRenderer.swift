@@ -59,10 +59,11 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
         cameraNode.position = SCNVector3Make(0, 0, 1) // set your camera position
         renderer.scene!.rootNode.addChildNode(cameraNode)
         
-//        let origin = SCNSphere(radius: 0.05)
-//        let originNode = SCNNode(geometry: origin)
-//        originNode.position = SCNVector3Make(0, 0, 0)
-//        renderer.scene!.rootNode.addChildNode(originNode)
+        let origin = SCNSphere(radius: 0.05)
+        let originNode = SCNNode(geometry: origin)
+        originNode.position = SCNVector3Make(0, 0, 0)
+        renderer.scene!.rootNode.addChildNode(originNode)
+        
         sceneView.scene = renderer.scene
         pixFormat = sceneView.colorPixelFormat
         
@@ -139,7 +140,7 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
-        if pixFormat != sceneView.colorPixelFormat {
+        if gfxPSO == nil || pixFormat != sceneView.colorPixelFormat {
             createPSO(pixelformat: sceneView.colorPixelFormat, sampleCnt: 4)
         }
         guard let gfxEncoder = renderer.currentRenderCommandEncoder else {return}

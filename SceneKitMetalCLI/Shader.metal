@@ -66,7 +66,7 @@ vertex ColorInOut vsRender(Vertex in [[ stage_in ]],
     f3Pos -= float3(0.31271, 0.329, fZoffset);
     
     out.col = lineCol / 10000.f;
-    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * float4(f3Pos, 1.0);
+    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * float4(f3Pos.xzy, 1.0);
     
     return out;
 }
