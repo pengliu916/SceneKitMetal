@@ -10,10 +10,25 @@
 #include "ColorUtilities.metal"
 using namespace metal;
 
+inline float3 BT2020D65_2_LMS(float3 f3RGB) {
+    const float3x3 mTran = float3x3(1688.f / 4096.f, 2146.f / 4096.f, 262.f / 4096.f,
+                                    683.f / 4096.f, 2951.f / 4096.f, 462.f / 4096.f,
+                                    99.f / 4096.f, 309.f / 4096.f, 3688.f / 4096.f);
+    return f3RGB * mTran;
+}
+
+inline float3 LMSPrime_2_ITP(float3 f3LMS) {
+    const float3x3 mTran = float3x3( 0.4000,  0.4000,  0.2000,
+                                    4.4550, -4.8510,  0.3960,
+                                    0.8056,  0.3572, -1.1628);
+    return f3LMS * mTran;
+}
+
 typedef struct
 {
     float4x4 projectionMatrix;
     float4x4 modelViewMatrix;
+    float edrFactor;
 } Uniforms;
 
 typedef struct
@@ -32,13 +47,16 @@ vertex ColorInOut vsRender(Vertex in [[ stage_in ]],
                            constant uint3 & u3Quantile [[ buffer(2) ]],
                            constant bool & bShowAll [[ buffer(3) ]],
                            constant float & fFocuseVal [[ buffer(4) ]],
-                           ushort iid [[ instance_id ]])
+                           uint iid [[ instance_id ]])
 {
     ColorInOut out;
     int ilayerCnt = u3Quantile.x * u3Quantile.y;
     int z = iid / ilayerCnt;
     int y = (iid % ilayerCnt) / u3Quantile.x;
     int x = iid % u3Quantile.x;
+    
+    //if (all(uint3(x,y,z)!=(u3Quantile - 1)) && x*y*z !=0)
+        //return out;
     
     float3 f3BoxSize = 1.0 / float3(u3Quantile);
     float3 f3Offset = float3(x,y,z) * f3BoxSize;
@@ -60,13 +78,16 @@ vertex ColorInOut vsRender(Vertex in [[ stage_in ]],
     
     float3 lineCol = PQ2L(f3Pos);
     
-    f3Pos = XYZ_2_xyY(BT2020D65RGB_2_XYZ(lineCol));
+    //f3Pos = XYZ_2_xyY(BT2020D65RGB_2_XYZ(lineCol));
+    f3Pos = LMSPrime_2_ITP(L2PQ(BT2020D65_2_LMS(lineCol)));
     
-    f3Pos.z /= 10000.f;
-    f3Pos -= float3(0.31271, 0.329, fZoffset);
+   // fZoffset = fFocuseVal/100.f;
+    //f3Pos.x *= fZoffset;
+    //f3Pos -= float3(0.31271, 0.329, fZoffset);
+    f3Pos.x -= 0.5;
     
-    out.col = lineCol / 10000.f;
-    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * float4(f3Pos.xzy, 1.0);
+    out.col = lineCol / 10000.f * uniforms.edrFactor;
+    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * float4(f3Pos.yxz, 1.0);
     
     return out;
 }

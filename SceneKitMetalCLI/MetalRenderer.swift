@@ -12,6 +12,7 @@ import SceneKit
 struct Uniforms {
     var projectionMatrix:matrix_float4x4
     var modelViewMatrix:matrix_float4x4
+    var edrFactor:Float
 }
 
 class MetalRenderer: NSObject, SCNSceneRendererDelegate, SCNNodeRendererDelegate {
@@ -48,7 +49,11 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate, SCNNodeRendererDelegate
         sceneView = SCNView(frame: NSApplication.shared.windows[0].frame)
         sceneView.autoenablesDefaultLighting = true
         sceneView.allowsCameraControl = true
-        sceneView.backgroundColor = .gray
+        sceneView.backgroundColor = .darkGray
+        sceneView.rendersContinuously = false
+        let caMTLLayer = sceneView.layer as! CAMetalLayer
+        caMTLLayer.wantsExtendedDynamicRangeContent = true
+        caMTLLayer.colorspace = CGColorSpace.init(name: CGColorSpace.displayP3)
         //sceneView.showsStatistics = true
         
         let camera = SCNCamera ()
@@ -59,10 +64,10 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate, SCNNodeRendererDelegate
         cameraNode.position = SCNVector3Make(0, 0, 1) // set your camera position
         renderer.scene!.rootNode.addChildNode(cameraNode)
         
-        let origin = SCNSphere(radius: 0.05)
-        let originNode = SCNNode(geometry: origin)
-        originNode.position = SCNVector3Make(0, 0, 0)
-        renderer.scene!.rootNode.addChildNode(originNode)
+//        let origin = SCNSphere(radius: 0.05)
+//        let originNode = SCNNode(geometry: origin)
+//        originNode.position = SCNVector3Make(0, 0, 0)
+//        renderer.scene!.rootNode.addChildNode(originNode)
         
         sceneView.scene = renderer.scene
         pixFormat = sceneView.colorPixelFormat
@@ -103,7 +108,7 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate, SCNNodeRendererDelegate
         mtlVertDesc = MetalRenderer.buildMetalVertexDescriptor()
         
         let depthStateDesciptor = MTLDepthStencilDescriptor()
-        depthStateDesciptor.depthCompareFunction = MTLCompareFunction.less
+        depthStateDesciptor.depthCompareFunction = MTLCompareFunction.greater
         depthStateDesciptor.isDepthWriteEnabled = true
         guard let state = dev.makeDepthStencilState(descriptor:depthStateDesciptor) else { return }
         depthState = state
@@ -178,16 +183,14 @@ class MetalRenderer: NSObject, SCNSceneRendererDelegate, SCNNodeRendererDelegate
             createPSO(pixelformat: sceneView.colorPixelFormat, sampleCnt: 4)
         }
         guard let gfxEncoder = renderer.currentRenderCommandEncoder else {return}
-        let x = UInt32(32)
-        let y = UInt32(32)
-        let z = UInt32(32)
-        gfxEncoder.setCullMode(.none)
-        gfxEncoder.setFrontFacing(.counterClockwise)
+        let x = UInt32(48)
+        let y = UInt32(48)
+        let z = UInt32(48)
         gfxEncoder.setRenderPipelineState(gfxPSO)
         gfxEncoder.setDepthStencilState(depthState)
         gfxEncoder.setVertexBuffer(vertexBuf, offset: 0, index: 0)
-        var matrixs = Uniforms(projectionMatrix: float4x4(arguments[SCNProjectionTransform] as! SCNMatrix4), modelViewMatrix: float4x4.init((sceneView.pointOfView?.worldTransform)!).inverse)
-        var bufSize = MemoryLayout<Float>.size * (2 * 16)
+        var matrixs = Uniforms(projectionMatrix: float4x4(arguments[SCNProjectionTransform] as! SCNMatrix4), modelViewMatrix: float4x4.init((sceneView.pointOfView?.worldTransform)!).inverse, edrFactor: Float(NSScreen.main!.maximumExtendedDynamicRangeColorComponentValue))
+        var bufSize = MemoryLayout<Float>.size * (2 * 16 + 4)
         gfxEncoder.setVertexBytes(&matrixs, length: bufSize, index: 1)
         var quantile = vector_uint3(x, y, z)
         bufSize = MemoryLayout<vector_uint3>.size
